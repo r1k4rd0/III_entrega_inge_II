@@ -11,6 +11,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.PopupDateField;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
+import com.vaadin.ui.Window;
 
 @SuppressWarnings("serial")
 public class CrearPlebiscito extends CustomComponent {
@@ -90,6 +91,19 @@ public class CrearPlebiscito extends CustomComponent {
 		    		label_10.setValue("Error al crear el evento, favor revise los datos");
 		    	}
 			}
+		});
+		//Boton definir padrón
+		button_3.addClickListener(new Button.ClickListener() {
+		    public void buttonClick(ClickEvent event) {
+		    	final Window w = new Window("Padrón electoral");
+				w.setContent(new CargarPadron());
+				w.setWidth("600px");
+				w.setHeight("500px");
+				w.center();
+				//w.setClosable(false);
+				// ui.getContent().setEnabled(false);
+				MyVaadinUI.getCurrent().addWindow(w);
+		    }
 		});
 	}
 

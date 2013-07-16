@@ -20,5 +20,5 @@ public class MyVaadinUI extends UI
         setContent(layout);
         setContent(new VentanaLogin());
     }
-
+    
 }

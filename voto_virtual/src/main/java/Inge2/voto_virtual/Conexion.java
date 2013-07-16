@@ -29,6 +29,7 @@ public class Conexion {
 	public Conexion(String usuario, String password) {
 		nombreConexion = "jdbc:postgresql://anon01.tk/edecisiones?user="
 				+ usuario + "&password=" + password;
+		//nombreConexion = "jdbc:postgresql://127.0.0.1:5432/voto_virtual?user=postgres&password=postgres";
 		try {
 			pool = new SimpleJDBCConnectionPool("org.postgresql.Driver",
 					"jdbc:postgresql://anon01.tk:5432/edecisiones", usuario,
@@ -37,6 +38,30 @@ public class Conexion {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Ejecuta un comando SQL (INSERT o UPDATE) donde el parametro es un arreglo de bytes
+	 * 
+	 * @param sql
+	 *            Consulta en lenguaje SQL.
+	 * @return exito true si se ejecuto el comando, false sino.
+	 */
+	public void ejecutarSeguro(String query, byte[] pkBytes) {
+		try {	
+			//System.out.println("INICIO GUARDADO SEGURO");
+			Connection conn = DriverManager.getConnection(nombreConexion);
+			PreparedStatement pstat;
+
+			pstat = conn.prepareStatement(query);
+			pstat.setBytes(1, pkBytes);
+			pstat.execute();
+			//System.out.println("GUARDO");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 	/**
@@ -94,15 +119,28 @@ public class Conexion {
 						.println("No se ejecuto la consulta o no genero resultado");
 			}
 			// Se cierra la conexion
-			comando.close();
-			conexion.close();
+			//comando.close();
+			//conexion.close();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 		// Se retorna el ResultSet
+		//Se retorna el ResultSet
+        try {
+			resultado.next();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return resultado;
 	}
 
+	/*
+	public void finDeConexion(){
+		comando.close();
+		conexion.close();		
+	}*/
+	
 	/**
 	 * Realiza una consulta SQL y retorna el resultado en un doble ArrayList de
 	 * Strings.
@@ -189,21 +227,58 @@ public class Conexion {
 		pool.destroy();
 	}
 
-	public ResultSet ejecutarLogin(String query, String user, String pass) {
+	/**
+	 * Ejecuta una consulta de usuario + contraseña.
+	 * Retorna un ResultSet con el usuario en cuestión o nulo
+	 * si la combinación usuario + contraseña es inválida.
+	 * @param query 
+	 * @param user correo electrónico del usuario
+	 * @param pass contraseña del usuario
+	 * @return
+	 */
+	public ResultSet ejecutarLogin(String user, String pass) {
 		ResultSet resultado = null;
+		String sql = "SELECT * FROM persona WHERE correo = ? AND clave = ?;";
 		try {
 			Connection conn = DriverManager.getConnection(nombreConexion);
 			PreparedStatement pstat;
-			pstat = conn.prepareStatement(query);
+			pstat = conn.prepareStatement(sql);
 			pstat.setString(1, user);
 			pstat.setString(2, pass);
 			if(pstat.execute()){
 				resultado = pstat.getResultSet();
 			}
+			//Aqui hace falta un close?
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return resultado;
+	}
+	
+	/**
+	 * Inserta un nuevo padrón y retorna el ID asociado.
+	 * @return id del padrón recién creado.
+	 */
+	public int insertarPadron(String ruta){
+		String sql = "INSERT INTO padron(ruta) VALUES(?);";
+		int id = -1;
+		try {
+			Connection conn = DriverManager.getConnection(nombreConexion);
+			PreparedStatement pstat;
+			pstat = conn.prepareStatement(sql);
+			pstat.setString(1, ruta);
+			if(pstat.executeUpdate()>0){
+				sql = "SELECT count(1) FROM padron;";
+				Statement comando = conn.createStatement();
+				ResultSet resultado = comando.executeQuery(sql);
+				id = resultado.getInt(1);
+			}
+			//Aqui hace falta un close?
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return id;
 	}
 }
